@@ -220,7 +220,7 @@ impl Event {
             panic!("Called `EventBuilder::json_data` multiple times");
         }
 
-        self.buffer.extend_from_slice(b"data:");
+        self.buffer.extend_from_slice(b"data: ");
         serde_json::to_writer((&mut self.buffer).writer(), &data).map_err(axum_core::Error::new)?;
         self.buffer.put_u8(b'\n');
 
@@ -358,10 +358,8 @@ impl Event {
         );
         self.buffer.extend_from_slice(name.as_bytes());
         self.buffer.put_u8(b':');
-        // Prevent values that start with spaces having that space stripped
-        if value.starts_with(b" ") {
-            self.buffer.put_u8(b' ');
-        }
+        self.buffer.put_u8(b' ');
+
         self.buffer.extend_from_slice(value);
         self.buffer.put_u8(b'\n');
     }
@@ -538,7 +536,7 @@ mod tests {
     #[test]
     fn leading_space_is_not_stripped() {
         let no_leading_space = Event::default().data("\tfoobar");
-        assert_eq!(&*no_leading_space.finalize(), b"data:\tfoobar\n\n");
+        assert_eq!(&*no_leading_space.finalize(), b"data: \tfoobar\n\n");
 
         let leading_space = Event::default().data(" foobar");
         assert_eq!(&*leading_space.finalize(), b"data:  foobar\n\n");
