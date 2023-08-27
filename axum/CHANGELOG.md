@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+- **breaking:** Remove deprecated `WebSocketUpgrade::max_send_queue`
 - **breaking:** The following types/traits are no longer generic over the request body
   (i.e. the `B` type param has been removed) ([#1751] and [#1789]):
   - `FromRequestParts`
@@ -61,6 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **fixed:** Allow unreachable code in `#[debug_handler]` ([#2014])
 - **change:** Update tokio-tungstenite to 0.19 ([#2021])
 - **change:** axum's MSRV is now 1.63 ([#2021])
+- **added:** Implement `Handler` for `T: IntoResponse` ([#2140])
+- **added:** Implement `IntoResponse` for `(R,) where R: IntoResponse` ([#2143])
 
 [#2021]: https://github.com/tokio-rs/axum/pull/2021
 [#2014]: https://github.com/tokio-rs/axum/pull/2014
@@ -77,6 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2058]: https://github.com/tokio-rs/axum/pull/2058
 [#2073]: https://github.com/tokio-rs/axum/pull/2073
 [#2096]: https://github.com/tokio-rs/axum/pull/2096
+[#2140]: https://github.com/tokio-rs/axum/pull/2140
+[#2143]: https://github.com/tokio-rs/axum/pull/2143
 
 # 0.6.17 (25. April, 2023)
 

@@ -604,9 +604,10 @@ where
 }
 
 impl MethodRouter<(), Infallible> {
-    /// Convert the handler into a [`MakeService`].
+    /// Convert the router into a [`MakeService`].
     ///
-    /// This allows you to serve a single handler if you don't need any routing:
+    /// This allows you to serve a single `MethodRouter` if you don't need any
+    /// routing based on the path:
     ///
     /// ```rust
     /// use axum::{
@@ -1343,10 +1344,10 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    async fn buiding_complex_router() {
+    async fn building_complex_router() {
         let app = crate::Router::new().route(
             "/",
-            // use the all the things :bomb:
+            // use the all the things 💣️
             get(ok)
                 .post(ok)
                 .route_layer(ValidateRequestHeaderLayer::bearer("password"))

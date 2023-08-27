@@ -739,6 +739,75 @@ async fn changing_the_default_limit() {
 }
 
 #[crate::test]
+async fn changing_the_default_limit_differently_on_different_routes() {
+    let limit1 = 2;
+    let limit2 = 10;
+
+    let app = Router::new()
+        .route(
+            "/limit1",
+            post(|_: Bytes| async {}).layer(DefaultBodyLimit::max(limit1)),
+        )
+        .route(
+            "/limit2",
+            post(|_: Bytes| async {}).layer(DefaultBodyLimit::max(limit2)),
+        )
+        .route("/default", post(|_: Bytes| async {}));
+
+    let client = TestClient::new(app);
+
+    let res = client
+        .post("/limit1")
+        .body(reqwest::Body::from("a".repeat(limit1)))
+        .send()
+        .await;
+    assert_eq!(res.status(), StatusCode::OK);
+
+    let res = client
+        .post("/limit1")
+        .body(reqwest::Body::from("a".repeat(limit2)))
+        .send()
+        .await;
+    assert_eq!(res.status(), StatusCode::PAYLOAD_TOO_LARGE);
+
+    let res = client
+        .post("/limit2")
+        .body(reqwest::Body::from("a".repeat(limit1)))
+        .send()
+        .await;
+    assert_eq!(res.status(), StatusCode::OK);
+
+    let res = client
+        .post("/limit2")
+        .body(reqwest::Body::from("a".repeat(limit2)))
+        .send()
+        .await;
+    assert_eq!(res.status(), StatusCode::OK);
+
+    let res = client
+        .post("/limit2")
+        .body(reqwest::Body::from("a".repeat(limit1 + limit2)))
+        .send()
+        .await;
+    assert_eq!(res.status(), StatusCode::PAYLOAD_TOO_LARGE);
+
+    let res = client
+        .post("/default")
+        .body(reqwest::Body::from("a".repeat(limit1 + limit2)))
+        .send()
+        .await;
+    assert_eq!(res.status(), StatusCode::OK);
+
+    let res = client
+        .post("/default")
+        // `DEFAULT_LIMIT` is 2mb so make a body larger than that
+        .body(reqwest::Body::from("a".repeat(3_000_000)))
+        .send()
+        .await;
+    assert_eq!(res.status(), StatusCode::PAYLOAD_TOO_LARGE);
+}
+
+#[crate::test]
 async fn limited_body_with_streaming_body() {
     const LIMIT: usize = 3;
 
@@ -1020,4 +1089,15 @@ async fn connect_going_to_default_fallback() {
     assert_eq!(res.status(), StatusCode::NOT_FOUND);
     let body = hyper::body::to_bytes(res).await.unwrap();
     assert!(body.is_empty());
+}
+
+#[crate::test]
+async fn impl_handler_for_into_response() {
+    let app = Router::new().route("/things", post((StatusCode::CREATED, "thing created")));
+
+    let client = TestClient::new(app);
+
+    let res = client.post("/things").send().await;
+    assert_eq!(res.status(), StatusCode::CREATED);
+    assert_eq!(res.text().await, "thing created");
 }

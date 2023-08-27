@@ -53,8 +53,6 @@ where
 
         validate_path(path)?;
 
-        let id = self.next_route_id();
-
         let endpoint = if let Some((route_id, Endpoint::MethodRouter(prev_method_router))) = self
             .node
             .path_to_route_id
@@ -74,6 +72,7 @@ where
             Endpoint::MethodRouter(method_router)
         };
 
+        let id = self.next_route_id();
         self.set_node(path, id)?;
         self.routes.insert(id, endpoint);
 
@@ -336,12 +335,12 @@ where
 
                 url_params::insert_url_params(req.extensions_mut(), match_.params);
 
-                let endpont = self
+                let endpoint = self
                     .routes
                     .get_mut(&id)
                     .expect("no route for id. This is a bug in axum. Please file an issue");
 
-                match endpont {
+                match endpoint {
                     Endpoint::MethodRouter(method_router) => {
                         Ok(method_router.call_with_state(req, state))
                     }
